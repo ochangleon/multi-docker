@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ochangleon/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run ochangleon/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t ochangleon/multi-client ./client
+  - docker build -t ochangleon/multi-nginx ./nginx
+  - docker build -t ochangleon/multi-server ./server
+  - docker build -t ochangleon/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push ochangleon/multi-client
+  - docker push ochangleon/multi-nginx
+  - docker push ochangleon/multi-server
+  - docker push ochangleon/multi-worker
+
